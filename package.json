@@ -1,0 +1,46 @@
+{
+  "name": "ux-research-synthesizer",
+  "version": "0.1.0",
+  "description": "Turn raw interview notes into structured themes, quotes, and severity ratings in under 30 minutes.",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "mcp:dev": "cd mcp-server && npm run dev",
+    "mcp:build": "cd mcp-server && npm run build"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@xenova/transformers": "^2.6.0",
+    "natural": "^6.7.0",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.0.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0"
+  },
+  "keywords": [
+    "ux-research",
+    "synthesis",
+    "ai",
+    "claude",
+    "next.js"
+  ],
+  "author": "jeancharlesamey",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ux-research-synthesizer.git"
+  }
+}
