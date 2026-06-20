@@ -7,9 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "mcp:dev": "cd mcp-server && npm run dev",
-    "mcp:build": "cd mcp-server && npm run build"
+    "lint": "next lint"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -33,8 +31,8 @@
   "keywords": [
     "ux-research",
     "synthesis",
-    "ai",
-    "claude",
+    "semantic-search",
+    "local-embeddings",
     "next.js"
   ],
   "author": "jeancharlesamey",

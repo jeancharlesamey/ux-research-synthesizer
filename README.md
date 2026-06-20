@@ -1,5 +1,7 @@
 # UX Research Synthesizer
 
+**v0.1.0** | June 20, 2026
+
 Turn raw interview notes into structured themes, quotes, and severity ratings in under 30 minutes. **No API keys. No external calls. All processing is local.**
 
 ## What this is
@@ -10,7 +12,7 @@ UX Research Synthesizer is a web tool for solo UX researchers who spend hours sy
 
 - **Not a real-time collaborative tool.** This is async, single-user, input → output. If you need team collaboration, use Dovetail or UserTesting.
 - **Not a full research platform.** We don't run studies, manage participants, or track longitudinal data. We accelerate synthesis for interviews you've already conducted.
-- **Not a transcription service.** Bring text notes only (copy-pasted from Otter.ai, your recorder, or handwritten). No audio upload in v1.
+- **Not a transcription service.** Paste text notes only (from Otter.ai, your recorder, or handwritten). No audio upload.
 - **Not an LLM interface.** No Claude, GPT, or third-party AI. All extraction is algorithmic (semantic similarity + keyword matching) with local embeddings.
 
 ## Quick start
@@ -28,10 +30,28 @@ Visit `http://localhost:3000` and paste your interview notes. The app will synth
 
 - **Frontend:** Next.js 15 (App Router) + Tailwind CSS — fast iteration, local-first theme editor.
 - **Backend:** Node.js + Next.js API routes — all processing happens here, no external APIs.
-- **Embeddings:** Sentence-transformers (local model) — semantic search for quote extraction, runs on-device or cached on Vercel.
+- **Embeddings:** Sentence-transformers (all-MiniLM-L6-v2) — local semantic search for quote extraction, runs in browser or server.
 - **NLP:** Keyword detection + semantic similarity + clustering — algorithmic severity ranking and theme matching.
 - **Deployment:** Vercel (supports large Node.js models) — zero ops, model cached after first load.
 - **Database:** None for v1 — stateless. Users paste notes, download markdown. All data stays local.
+
+## Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `next` | ^15.0.0 | React framework with App Router |
+| `react` | ^19.0.0 | UI library |
+| `react-dom` | ^19.0.0 | React DOM rendering |
+| `@xenova/transformers` | ^2.6.0 | Local sentence embeddings (all-MiniLM-L6-v2) |
+| `@heroicons/react` | ^2.2.0 | Icon components |
+| `natural` | ^6.7.0 | NLP utilities for text processing |
+| `tailwindcss` | ^3.4.0 | Utility-first CSS framework |
+| `typescript` | ^5.0.0 | Type safety |
+| `autoprefixer` | ^10.4.0 | CSS vendor prefixes |
+| `postcss` | ^8.4.0 | CSS transformations |
+| `eslint` | ^8.57.0 | Code linting |
+
+**No external APIs required.** All processing runs locally in Node.js or the browser.
 
 ## How it works
 
@@ -51,10 +71,10 @@ Under the hood: sentence-transformers generates embeddings for all notes and the
 
 ## Roadmap
 
-- ✅ **v1 launch** — paste notes, extract themes, rank quotes, export markdown (current)
-- 🟡 **v1.1** — PDF export, custom prompt templates (planned)
-- ⚪ **v2** — multi-user team synthesis, real-time collaboration (if demand warrants)
-- ⚪ **v2+** — audio upload + auto-transcription, integrations with Figma/Slack (future, not committed)
+- ✅ **v0.1 launch** — paste notes, extract themes, rank quotes, export markdown (current)
+- 🟡 **v0.1.1** — PDF export, custom prompt templates (planned)
+- ⚪ **v0.2** — multi-user team synthesis, real-time collaboration (if demand warrants)
+- ⚪ **v0.2+** — audio upload + auto-transcription, integrations with Figma/Slack (future, not committed)
 
 ## Environment setup
 
@@ -97,7 +117,7 @@ MIT — see [LICENSE](LICENSE) for details.
 
 ## About
 
-Built by jeancharlesamey. Find more at [your portfolio/substack].
+Built for UX researchers by jeancharlesamey. Designed to save hours of manual synthesis work.
 
 ---
 
