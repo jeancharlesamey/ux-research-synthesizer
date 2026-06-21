@@ -1,6 +1,6 @@
 # UX Research Synthesizer
 
-**v0.1.0** | June 20, 2026
+**v0.1.1** | June 21th, 2026
 
 Turn raw interview notes into structured themes, quotes, and severity ratings in under 30 minutes. **No API keys. No external calls. All processing is local.**
 
