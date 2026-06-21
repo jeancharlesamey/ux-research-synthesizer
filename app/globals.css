@@ -92,3 +92,7 @@ body {
 .animate-dots span:nth-child(3) {
   animation-delay: 0.4s;
 }
+
+input[type='range'] {
+  @apply border-0;
+}

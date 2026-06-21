@@ -14,16 +14,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-brand-50">
-        <nav className="bg-white shadow-sm border-b border-brand-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <h1 className="text-xl font-bold text-brand-900">
-              UX Research Synthesizer
-            </h1>
-          </div>
-        </nav>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {children}
-        </main>
+        {children}
       </body>
     </html>
   );

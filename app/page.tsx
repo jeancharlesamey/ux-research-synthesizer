@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { EyeIcon, EyeSlashIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
+import { EyeIcon, EyeSlashIcon, ChevronRightIcon, Cog6ToothIcon, XMarkIcon } from '@heroicons/react/20/solid';
 import type { Theme } from '@/lib/themes';
 
 export default function Home() {
@@ -17,14 +17,36 @@ export default function Home() {
   const [sentenceThemes, setSentenceThemes] = useState<Map<string, string>>(new Map());
   const [expandNotes, setExpandNotes] = useState(true);
   const [editingQuoteIdx, setEditingQuoteIdx] = useState<number | null>(null);
+  const [settingsSidebarOpen, setSettingsSidebarOpen] = useState(false);
+  const [keywordInput, setKeywordInput] = useState<Record<string, string>>({});
+  const [isHoveringTitle, setIsHoveringTitle] = useState(false);
 
-  // Load default themes on mount
+  // Load default themes on mount and restore from localStorage
   useEffect(() => {
     fetch('/api/themes')
       .then((r) => r.json())
-      .then((data) => setThemes(data.themes))
+      .then((data) => {
+        const saved = localStorage.getItem('themes');
+        if (saved) {
+          try {
+            const parsedThemes = JSON.parse(saved);
+            setThemes(parsedThemes);
+          } catch {
+            setThemes(data.themes);
+          }
+        } else {
+          setThemes(data.themes);
+        }
+      })
       .catch((e) => console.error('Failed to load themes:', e));
   }, []);
+
+  // Save themes to localStorage whenever they change
+  useEffect(() => {
+    if (themes.length > 0) {
+      localStorage.setItem('themes', JSON.stringify(themes));
+    }
+  }, [themes]);
 
   // Auto-collapse notes when synthesis appears
   useEffect(() => {
@@ -113,123 +135,156 @@ export default function Home() {
     return colors[themeName || ''] || 'bg-gray-100 text-gray-800';
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header - hidden for now */}
+  const parseKeywords = (input: string): string[] => {
+    // Handle quoted phrases and comma-separated values (supports accents)
+    const quoted = input.match(/"([^"]*)"/g)?.map(q => q.slice(1, -1).trim()) || [];
+    const remaining = input.replace(/"([^"]*)"/g, '').split(',').map(s => s.trim()).filter(s => s.length > 0);
+    return [...quoted, ...remaining].filter(k => k && k.length > 0);
+  };
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-brand-200">
+  const addKeyword = (themeId: string, keyword: string) => {
+    setThemes((prev) =>
+      prev.map((t) =>
+        t.id === themeId
+          ? { ...t, keywords: [...(t.keywords || []), keyword] }
+          : t
+      )
+    );
+    setKeywordInput((prev) => ({ ...prev, [themeId]: '' }));
+  };
+
+  const removeKeyword = (themeId: string, keyword: string) => {
+    setThemes((prev) =>
+      prev.map((t) =>
+        t.id === themeId
+          ? { ...t, keywords: (t.keywords || []).filter(k => k !== keyword) }
+          : t
+      )
+    );
+  };
+
+  const handleResetPage = () => {
+    console.log('[reset] Clearing page state');
+    setNotes('');
+    setSynthesis(null);
+    setActiveTab('notes');
+    setEditingQuoteIdx(null);
+    setExpandNotes(true);
+    setSentenceThemes(new Map());
+    setHideUntagged(false);
+  };
+
+  return (
+    <>
+      {/* Header Nav */}
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 w-full flex items-center justify-between border-b border-brand-200">
         <button
-          onClick={() => {
-            setActiveTab('notes');
-            setEditingQuoteIdx(null);
-          }}
-          className={`px-4 py-2 font-medium border-b-2 transition-colors ${
-            activeTab === 'notes'
-              ? 'border-brand-600 text-brand-600'
-              : 'border-transparent text-gray-600 hover:text-brand-600'
-          }`}
+          onClick={handleResetPage}
+          onMouseEnter={() => setIsHoveringTitle(true)}
+          onMouseLeave={() => setIsHoveringTitle(false)}
+          className="text-xl font-bold text-brand-900 hover:text-brand-600 transition-colors cursor-pointer"
         >
-          Interview Report
+          {isHoveringTitle ? 'Synthesize an other interview' : 'UX Research Synthesizer'}
         </button>
         <button
-          onClick={() => {
-            setActiveTab('themes');
-            setEditingQuoteIdx(null);
-          }}
-          className={`px-4 py-2 font-medium border-b-2 transition-colors ${
-            activeTab === 'themes'
-              ? 'border-brand-600 text-brand-600'
-              : 'border-transparent text-gray-600 hover:text-brand-600'
-          }`}
+          onClick={() => setSettingsSidebarOpen(!settingsSidebarOpen)}
+          className="px-3 py-2 text-brand-600 hover:text-brand-700 font-medium flex items-center gap-2 text-sm"
+          title="Settings"
         >
-          Themes ({themes.length})
+          <Cog6ToothIcon className="w-4 h-4" />
+          <span>Settings</span>
         </button>
-        {synthesis && (
-          <button
+      </nav>
+
+      {/* Main Content */}
+      <div className="flex h-screen bg-brand-50">
+      <div className="flex-1 overflow-auto flex flex-col">
+      <div className="space-y-6 p-6 flex-1">
+
+      {/* Tabs - only show after synthesis */}
+      {synthesis && (
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2 flex-1 border-b border-brand-200">
+            <button
             onClick={() => {
-              setActiveTab('quotes');
+              setActiveTab('notes');
               setEditingQuoteIdx(null);
             }}
             className={`px-4 py-2 font-medium border-b-2 transition-colors ${
-              activeTab === 'quotes'
+              activeTab === 'notes'
                 ? 'border-brand-600 text-brand-600'
                 : 'border-transparent text-gray-600 hover:text-brand-600'
             }`}
           >
-            Quotes ({synthesis.sentences?.length || 0})
+            Interview Report
           </button>
-        )}
-      </div>
+          <button
+              onClick={() => {
+                setActiveTab('quotes');
+                setEditingQuoteIdx(null);
+              }}
+              className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+                activeTab === 'quotes'
+                  ? 'border-brand-600 text-brand-600'
+                  : 'border-transparent text-gray-600 hover:text-brand-600'
+              }`}
+            >
+              Quotes ({synthesis.sentences?.length || 0})
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="pt-6">
 
       {/* Notes Tab */}
       {activeTab === 'notes' && (
         <div>
-          {/* Show/hide button - always visible */}
-          {synthesis && (
-            <button
-              onClick={() => setExpandNotes(!expandNotes)}
-              className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-2 justify-end w-full"
-            >
-              <span>Interview Notes ({notes.length} chars)</span>
-              {expandNotes ? (
-                <>
-                  <EyeSlashIcon className="w-4 h-4" />
-                  <span className="text-xs">hide</span>
-                </>
-              ) : (
-                <>
-                  <EyeIcon className="w-4 h-4" />
-                  <span className="text-xs">show</span>
-                </>
-              )}
-            </button>
-          )}
-
           {/* Notes content - fades out when synthesis appears */}
           <div className={synthesis && !expandNotes ? 'animate-fade-out-up' : ''}>
             {(expandNotes || !synthesis) && (
-              <>
-                <label className="block mb-4">
-                  <textarea
+              <div className="flex items-center justify-center min-h-96">
+                <div className="w-2/3 space-y-4">
+                  <input
+                    type="text"
                     value={notes}
                     onChange={(e) => {
-                      console.log('[textarea] Changed, value length:', e.target.value.length);
+                      console.log('[input] Changed, value length:', e.target.value.length);
                       setNotes(e.target.value);
                     }}
-                    placeholder="Paste your raw interview transcripts or notes here. Minimum 10 sentences recommended..."
-                    className="mt-2 block w-full h-48 px-4 py-3 border border-brand-200 rounded-lg bg-white text-brand-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-600"
+                    placeholder="Paste your raw interview transcripts or notes here..."
+                    className="w-full px-4 py-3 border border-brand-200 rounded-lg bg-white text-brand-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-600"
                   />
-                </label>
 
-                <button
-                  onClick={handleSynthesizeNotes}
-                  disabled={isLoading || themes.length === 0 || !notes.trim()}
-                  className="px-6 py-3 bg-brand-600 text-white font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isLoading ? (
-                    <>
-                      Synthesizing
-                      <span className="animate-dots">
-                        <span>.</span>
-                        <span>.</span>
-                        <span>.</span>
-                      </span>
-                    </>
-                  ) : (
-                    'Synthesize Notes'
+                  {notes.trim() && (
+                    <button
+                      onClick={handleSynthesizeNotes}
+                      disabled={isLoading || themes.length === 0}
+                      className="w-full px-6 py-3 bg-brand-600 text-white font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isLoading ? (
+                        <>
+                          Synthesizing
+                          <span className="animate-dots">
+                            <span>.</span>
+                            <span>.</span>
+                            <span>.</span>
+                          </span>
+                        </>
+                      ) : (
+                        'Synthesize Notes'
+                      )}
+                    </button>
                   )}
-                </button>
-              </>
+                </div>
+              </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Themes Tab */}
-      {activeTab === 'themes' && (
+      {/* Themes Tab - hidden (moved to sidebar) */}
+      {/* {activeTab === 'themes' && (
         <div>
           <div className="space-y-4">
             {themes.map((theme) => (
@@ -303,7 +358,7 @@ export default function Home() {
             </div>
           )}
         </div>
-      )}
+      ) } */}
 
       {/* Results - only show on Notes tab */}
       {synthesis && activeTab === 'notes' && (
@@ -498,7 +553,125 @@ export default function Home() {
       )}
 
       </div>
-    </div>
+      </div>
+      </div>
+
+      {/* Sidebar Overlay */}
+      {settingsSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 z-40"
+          onClick={() => setSettingsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Right Sidebar - Settings */}
+      {settingsSidebarOpen && (
+        <div className="fixed right-0 top-0 h-screen w-96 bg-white border-l border-brand-200 overflow-y-auto shadow-lg z-50" onClick={(e) => e.stopPropagation()}>
+          <div className="p-6 space-y-6 pb-20">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-brand-900">Settings</h2>
+              <button
+                onClick={() => setSettingsSidebarOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-brand-900 mb-4">Themes & Keywords</h3>
+              <div className="space-y-6">
+                {themes.map((theme) => (
+                  <div key={theme.id} className="bg-brand-50 rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="font-bold text-brand-900">{theme.name}</h4>
+                      {!theme.id.startsWith('default') && (
+                        <button
+                          onClick={() => handleRemoveTheme(theme.id)}
+                          className="text-sm text-red-600 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-sm text-gray-700">{theme.definition}</p>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm">
+                        <span className="text-gray-700">
+                          Sensitivity: {(theme.closenessThreshold * 100).toFixed(0)}%
+                        </span>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="5"
+                          value={theme.closenessThreshold * 100}
+                          onChange={(e) => handleUpdateThemeThreshold(theme.id, parseFloat(e.target.value) / 100)}
+                          className="mt-2 w-full"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Keywords as Tags */}
+                    {theme.keywords && theme.keywords.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-gray-600 font-medium">Keywords</p>
+                        <div className="flex gap-2 flex-wrap">
+                          {theme.keywords.map((kw, idx) => (
+                            <div
+                              key={`${theme.id}-keyword-${idx}`}
+                              className="flex items-center gap-1 bg-white border border-brand-200 text-brand-700 text-xs px-2 py-1 rounded"
+                            >
+                              <span>{kw}</span>
+                              <button
+                                onClick={() => removeKeyword(theme.id, kw)}
+                                className="text-brand-600 hover:text-brand-700 font-bold"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Keyword Input */}
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-600 font-medium">Add keywords</label>
+                      <textarea
+                        value={keywordInput[theme.id] || ''}
+                        onChange={(e) => setKeywordInput((prev) => ({ ...prev, [theme.id]: e.target.value }))}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            const input = (e.target as HTMLTextAreaElement).value.trim();
+                            if (input) {
+                              const parsed = parseKeywords(input);
+                              parsed.forEach((kw) => {
+                                if (!theme.keywords?.includes(kw)) {
+                                  addKeyword(theme.id, kw);
+                                }
+                              });
+                            }
+                          }
+                        }}
+                        placeholder='Type a keyword or paste: "is better", need, urgent'
+                        className="w-full text-xs px-2 py-1 border border-brand-200 rounded bg-white text-brand-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-600"
+                        rows={2}
+                      />
+                      <p className="text-xs text-gray-500">Press Enter to add. Paste comma-separated or quoted phrases.</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
+    </>
   );
 }
 
